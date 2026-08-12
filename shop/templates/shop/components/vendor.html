@@ -1,0 +1,13 @@
+<div class="container-fluid py-5">
+    <div class="row px-xl-5">
+        <div class="col">
+            <div class="owl-carousel vendor-carousel">
+                {% for sponsor in sponsors %}
+                <div class="bg-light p-4">
+                    <img src="{{sponsor.image.url}}" alt="{{sponsor.title}}">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

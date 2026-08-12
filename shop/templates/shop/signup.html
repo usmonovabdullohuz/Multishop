@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block main %}
+<!-- Signin Start -->
+    <div class="container">
+        <form action="{% url 'signup' %}" method="post" enctype="multipart/form-data" class="col-5 mx-auto d-flex flex-column">
+            {% csrf_token %}
+            <h3 class="text-center">REGISTER</h3>
+               {{form.as_p}}
+            <button class="btn btn-warning" type="submit">Sign Up</button>
+        </form>
+    </div>
+    <!-- Signin End -->
+{% endblock main %}

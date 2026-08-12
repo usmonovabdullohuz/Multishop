@@ -1,0 +1,46 @@
+{% load shop_tags %}
+
+
+
+<div class="product-item bg-light mb-4">
+    <div class="product-img position-relative overflow-hidden">
+        <img class="img-fluid w-100" src="{{product.get_image}}" alt="" style="height: 450.25px; object-fit: cover">
+        <div class="product-action">
+            {% if request.user.is_authenticated %}
+            {% get_likes request.user as likes %}
+            <a class="btn btn-outline-dark btn-square" href="{% url 'basket_add' product.pk %}"><i class="fa fa-shopping-cart"></i></a>
+            <a class="btn btn-outline-dark btn-square" href="{% url 'like' product.pk %}">
+                {% if product in likes %}
+                <i class="fas fa-heart text-danger"></i>
+                {% else %}
+                <i class="far fa-heart"></i>
+                {% endif %}
+            </a>
+            {% else %}
+            <a class="btn btn-outline-dark btn-square" href="{% url 'signin' %}"><i class="fa fa-shopping-cart"></i></a>
+            <a class="btn btn-outline-dark btn-square" href="{% url 'signin' %}"><i class="far fa-heart"></i></a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="text-center py-4">
+        <a class="h6 text-decoration-none text-truncate" href="{% url 'detail' product.pk %}">{{product.title | truncatewords:3}}</a>
+        <div class="d-flex align-items-center justify-content-center mt-2">
+            {% if product.types.first.sale %}
+            <h5>${{product.types.first.sale}}</h5>
+            <h6 class="text-muted ml-2">
+                <del>${{product.types.first.price}}</del>
+            </h6>
+            {% else %}
+            <h5>${{product.types.first.price}}</h5>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center justify-content-center mb-1">
+            <small class="fa fa-star text-primary mr-1"></small>
+            <small class="fa fa-star text-primary mr-1"></small>
+            <small class="fa fa-star text-primary mr-1"></small>
+            <small class="fa fa-star text-primary mr-1"></small>
+            <small class="fa fa-star text-primary mr-1"></small>
+            <small>(99)</small>
+        </div>
+    </div>
+</div>
