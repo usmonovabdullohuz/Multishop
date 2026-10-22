@@ -3,6 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import ForeignKey
 
+NO_USER_IMG = "https://i0.wp.com/digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png?fit=500%2C500&ssl=1"
+NO_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original"
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **kwargs):
@@ -22,6 +25,7 @@ class UserManager(BaseUserManager):
             raise ValueError("Super User must be True")
         return self.create_user(username=username, password=password, **kwargs)
 
+
 class User(AbstractUser):
     COUNTRY_CHOICES = [
         ("Uzbekistan", "Uzbekistan"),
@@ -40,13 +44,14 @@ class User(AbstractUser):
         if self.avatar:
             try:
                 return self.avatar.url
-            except:
-                return "https://i0.wp.com/digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png?fit=500%2C500&ssl=1"
-        return 'https://i0.wp.com/digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png?fit=500%2C500&ssl=1'
+            except Exception:
+                return NO_USER_IMG
+        return NO_USER_IMG
 
     objects = UserManager()
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
+
 
 class Contact(models.Model):
     full_name = models.CharField(max_length=50)
@@ -56,6 +61,7 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.full_name
+
 
 class Category(models.Model):
     title = models.CharField(max_length=50)
@@ -67,6 +73,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Category'
         verbose_name_plural = 'Categories'
+
 
 class SubCategory(models.Model):
     title = models.CharField(max_length=50)
@@ -81,13 +88,15 @@ class SubCategory(models.Model):
         verbose_name = "Sub Category"
         verbose_name_plural = "Sub Categories"
 
+
 class Offer(models.Model):
     title = models.CharField(max_length=250)
     sale = models.IntegerField(default=5)
     image = models.ImageField(upload_to="images/offers/")
 
     def __str__(self):
-        return self
+        return self.title
+
 
 class Sponsor(models.Model):
     title = models.CharField(max_length=50)
@@ -95,6 +104,7 @@ class Sponsor(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class Product(models.Model):
     title = models.CharField(max_length=250)
@@ -107,12 +117,14 @@ class Product(models.Model):
         return self.title
 
     def get_image(self):
-        if self.images:
+        first = self.images.first()
+        if first:
             try:
-                return self.images.first().image.url
-            except:
-                return 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original'
-        return 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original'
+                return first.image.url
+            except Exception:
+                return NO_IMAGE
+        return NO_IMAGE
+
 
 class ProductType(models.Model):
     SIZE_CHOICES = [
@@ -140,9 +152,11 @@ class ProductType(models.Model):
     class Meta:
         unique_together = ("product", "size", "color")
 
+
 class ProductImage(models.Model):
     image = models.ImageField(upload_to="images/products")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+
 
 class Like(models.Model):
     user = ForeignKey(User, on_delete=models.CASCADE)
@@ -151,19 +165,27 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.product.title}"
 
+
 class Basket(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def _type(self):
+        return self.product.types.first() if self.product else None
+
     def get_total_sale(self):
-        if self.product.types.first().sale:
-            return self.product.types.first().sale * self.quantity
-        return self.product.types.first().price * self.quantity
+        t = self._type()
+        if not t:
+            return 0
+        return (t.sale or t.price) * self.quantity
 
     def get_total_price(self):
-        return self.product.types.first().price * self.quantity
+        t = self._type()
+        if not t:
+            return 0
+        return t.price * self.quantity
 
     def __str__(self):
-        return self.product.title
+        return self.product.title if self.product else "Deleted product"

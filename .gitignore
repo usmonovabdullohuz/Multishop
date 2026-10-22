@@ -33,9 +33,7 @@ staticfiles/
 .DS_Store
 Thumbs.db
 
-# Frontend
-frontend/
-node_modules/
+
 
 # Distribution / packaging
 build/
