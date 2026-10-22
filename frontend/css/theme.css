@@ -1,0 +1,181 @@
+/* =========================================================
+   theme.css — premium qatlam (custom.css dan KEYIN ulanadi)
+   Rang almashtirish: faqat pastdagi :root o'zgaruvchilarini o'zgartir
+   ========================================================= */
+
+:root {
+  --gold-1: #FFD333;
+  --gold-2: #FFB800;
+  --ink-1: #2B3138;
+  --ink-2: #3D464D;
+  --glow-rgb: 255, 184, 0;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* ---------- Umumiy ---------- */
+a { transition: color .25s ease; }
+
+:focus-visible {
+  outline: 2px solid var(--gold-2);
+  outline-offset: 3px;
+}
+
+img { animation: imgFade .8s ease both; }
+
+@keyframes imgFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---------- To'q bloklar: gradient (yuqori panel, footer) ---------- */
+.bg-dark {
+  background-image: linear-gradient(135deg, var(--ink-1), var(--ink-2)) !important;
+}
+
+/* ---------- Navbar: shisha (glass) effekti ---------- */
+.navbar.bg-dark {
+  background: rgba(43, 49, 56, .88) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+}
+
+.navbar-dark .navbar-nav .nav-link { position: relative; }
+.navbar-dark .navbar-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 12px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .4s cubic-bezier(.22, .61, .36, 1);
+}
+.navbar-dark .navbar-nav .nav-link:hover::after,
+.navbar-dark .navbar-nav .nav-link.active::after { transform: scaleX(1); }
+
+@media (max-width: 991.98px) {
+  .navbar-dark .navbar-nav .nav-link::after { left: 0; right: 0; bottom: 2px; }
+}
+
+/* ---------- Asosiy tugma: gradient + yaltirash (shine) ---------- */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+  background-image: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: transform .25s cubic-bezier(.22, .61, .36, 1),
+              box-shadow .25s cubic-bezier(.22, .61, .36, 1),
+              background-position .6s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  background-position: 100% 50%;
+  box-shadow: 0 10px 26px rgba(var(--glow-rgb), .45);
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, .6), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+.btn-primary:hover::after { animation: shine .9s ease; }
+
+@keyframes shine { to { left: 140%; } }
+
+.btn-outline-primary:hover { box-shadow: 0 8px 22px rgba(var(--glow-rgb), .35); }
+
+/* ---------- Mahsulot kartalari ---------- */
+.product-item { position: relative; }
+.product-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2;
+  background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .45s cubic-bezier(.22, .61, .36, 1);
+}
+.product-item:hover::before { transform: scaleX(1); }
+.product-item:hover { box-shadow: 0 22px 46px rgba(var(--glow-rgb), .22); }
+
+.product-item h6 a { transition: color .25s ease; }
+.product-item h6 a:hover { color: #B57F00; text-decoration: none; }
+.product-item h5 { color: #B57F00; font-weight: 700 !important; }
+
+.product-action .btn { transition-timing-function: var(--spring); }
+
+/* ---------- Kategoriya kartalari ---------- */
+.cat-item:hover { box-shadow: 0 22px 46px rgba(var(--glow-rgb), .28); }
+
+/* ---------- Karusel indikatorlari ---------- */
+.carousel-indicators .active {
+  background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+  border-color: var(--gold-1);
+}
+
+/* ---------- Tepaga qaytish tugmasi ---------- */
+.back-to-top {
+  border: 0;
+  background-image: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+}
+
+/* ---------- Skroll bilan boshqariladigan animatsiyalar ----------
+   Chrome/Edge'da ishlaydi; qo'llab-quvvatlamaydigan brauzerlarda
+   avvalgi (custom.css) animatsiyalar qoladi. */
+@supports (animation-timeline: view()) {
+  .product-item,
+  .cat-item,
+  .product-offer {
+    animation: revealUp linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+}
+
+/* translate/scale alohida xususiyat, shuning uchun hover'dagi transform bilan to'qnashmaydi */
+@keyframes revealUp {
+  from { opacity: 0; translate: 0 44px; scale: .96; }
+  to   { opacity: 1; translate: 0 0;    scale: 1; }
+}
+
+@supports (animation-timeline: scroll()) {
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 2000;
+    background: linear-gradient(90deg, var(--gold-1), var(--gold-2), #ff9a3c);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    animation: growBar linear both;
+    animation-timeline: scroll(root);
+    pointer-events: none;
+  }
+}
+
+@keyframes growBar { to { transform: scaleX(1); } }
+
+/* ---------- Harakatni kamaytirish ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
