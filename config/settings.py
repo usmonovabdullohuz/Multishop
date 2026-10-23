@@ -11,8 +11,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY") or "9$$#m)54aas@-g4=rqt2wub1loz_w!hha_
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["usmonov77.pythonanywhere.com", "localhost", "127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://usmonov77.pythonanywhere.com"]
+ALLOWED_HOSTS = ["*"]
 
 
 INSTALLED_APPS = [
