@@ -5,13 +5,14 @@
 
 <head>
     <meta charset="utf-8">
-    <title>MultiShop - Online Shop Website Template</title>
+    <title>MultiShop - Online Shop</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free HTML Templates" name="keywords">
-    <meta content="Free HTML Templates" name="description">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta content="Online shop" name="keywords">
+    <meta content="Online shop" name="description">
 
     <!-- Favicon -->
-    <link href="img/favicon.ico" rel="icon">
+    <link href="{% static 'img/favicon.ico' %}" rel="icon">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -28,11 +29,68 @@
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <link href="{% static 'css/custom.css' %}" rel="stylesheet">
     <link href="{% static 'css/theme.css' %}" rel="stylesheet">
+
+    <style>
+        /* Hisoblagich sakrashi */
+        .count-bump { animation: countBump .45s cubic-bezier(.34, 1.56, .64, 1); }
+        @keyframes countBump {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.6); background: #FFD333; color: #3D464D; }
+            100% { transform: scale(1); }
+        }
+
+        /* Xabar (toast) */
+        .shop-toast {
+            position: fixed; left: 50%; bottom: 28px;
+            transform: translate(-50%, 20px); opacity: 0;
+            background: #2B3138; color: #fff;
+            padding: 12px 22px; border-radius: 50px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+            transition: opacity .35s ease, transform .35s ease;
+            z-index: 3000; font-size: .95rem; max-width: 90vw; text-align: center;
+        }
+        .shop-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        /* Yurak bosilganda */
+        .is-liked i { color: #e63946 !important; }
+        .pop { animation: heartPop .5s cubic-bezier(.34, 1.56, .64, 1); }
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            45% { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+
+        /* Login / ro'yxatdan o'tish kartasi */
+        .auth-card { border-radius: 14px; box-shadow: 0 10px 28px rgba(61, 70, 77, .14); }
+        .auth-card label { font-weight: 500; color: #3D464D; margin-bottom: .25rem; }
+        .auth-card input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]),
+        .auth-card select, .auth-card textarea {
+            display: block; width: 100%; padding: .55rem .85rem;
+            border: 1px solid #ced4da; border-radius: 8px;
+            transition: border-color .25s ease, box-shadow .25s ease;
+        }
+        .auth-card input:focus, .auth-card select:focus, .auth-card textarea:focus {
+            outline: 0; border-color: #FFD333; box-shadow: 0 0 0 .22rem rgba(255, 211, 51, .35);
+        }
+        .auth-card ul.errorlist { list-style: none; padding: 0; margin: 0 0 .4rem; color: #dc3545; font-size: .85rem; }
+        .auth-card .helptext { display: block; font-size: .8rem; color: #6c757d; }
+    </style>
 </head>
 
 <body>
     {% include 'components/topbar.html' %}
     {% include 'components/navbar.html' %}
+
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     {% block main %}
     {% endblock main %}
@@ -50,6 +108,7 @@
 <script src="{% static 'lib/easing/easing.min.js' %}"></script>
 <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
 <script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/shop.js' %}"></script>
 </body>
 
 </html>

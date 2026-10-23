@@ -40,34 +40,30 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                    <!-- Telefon uchun qidiruv -->
+                    <form action="{% url 'search' %}" class="d-lg-none w-100 my-3">
+                        <div class="input-group">
+                            <input name="q" type="text" class="form-control" placeholder="Search for products">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                    </form>
                     <div class="navbar-nav mr-auto py-0">
-                        <a href="{% url 'home' %}" class="nav-item nav-link active">Home</a>
-                        <a href="{% url 'contact' %}" class="nav-item nav-link">Contact</a>
+                        <a href="{% url 'home' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                        <a href="{% url 'contact' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
                     </div>
                     <div class="navbar-nav ml-auto py-0 d-none d-lg-block">
-                        {% if request.user.is_authenticated %}
-                        <a href="{% url 'likes' %}" class="btn px-0">
+                        <a href="{% if request.user.is_authenticated %}{% url 'likes' %}{% else %}{% url 'signin' %}{% endif %}" class="btn px-0">
                             <i class="fas fa-heart text-primary"></i>
                             <span class="badge text-secondary border border-secondary rounded-circle"
-                                  style="padding-bottom: 2px;">0</span>
+                                  style="padding-bottom: 2px;" data-count="likes">{{ likes_count }}</span>
                         </a>
-                        <a href="{% url 'basket' %}" class="btn px-0 ml-3">
+                        <a href="{% if request.user.is_authenticated %}{% url 'basket' %}{% else %}{% url 'signin' %}{% endif %}" class="btn px-0 ml-3">
                             <i class="fas fa-shopping-cart text-primary"></i>
                             <span class="badge text-secondary border border-secondary rounded-circle"
-                                  style="padding-bottom: 2px;">0</span>
+                                  style="padding-bottom: 2px;" data-count="basket">{{ basket_count }}</span>
                         </a>
-                        {% else %}
-                        <a href="{% url 'signin' %}" class="btn px-0">
-                            <i class="fas fa-heart text-primary"></i>
-                            <span class="badge text-secondary border border-secondary rounded-circle"
-                                  style="padding-bottom: 2px;">0</span>
-                        </a>
-                        <a href="{% url 'signin' %}" class="btn px-0 ml-3">
-                            <i class="fas fa-shopping-cart text-primary"></i>
-                            <span class="badge text-secondary border border-secondary rounded-circle"
-                                  style="padding-bottom: 2px;">0</span>
-                        </a>
-                        {% endif %}
                     </div>
                 </div>
             </nav>

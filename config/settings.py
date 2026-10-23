@@ -7,7 +7,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("uj^4$+rwonr$337x@*jq&50ie4@z^a*+3+(j(0g5*8)5ep+w1#")
+SECRET_KEY = os.environ.get("SECRET_KEY") or "9$$#m)54aas@-g4=rqt2wub1loz_w!hha_aqk2um4&s-y7dt#r"
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
@@ -47,6 +47,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'shop.context_processors.counters',
             ],
         },
     },

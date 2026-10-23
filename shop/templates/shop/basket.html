@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block main %}
 <div class="container-fluid">
+    {% if products %}
     <div class="row px-xl-5">
         <div class="col-lg-8 table-responsive mb-5">
             <table class="table table-light table-borderless table-hover text-center mb-0">
@@ -16,30 +17,33 @@
                 <tbody class="align-middle">
                 {% for item in products %}
                 <tr>
-                    <td class="align-middle d-flex align-items-center"><img src="{{item.product.get_image}}" alt="" style="width: 50px;">
-                        <p class="my-0 mx-3">{{item.product.title| truncatewords:3}}</p>
+                    <td class="align-middle text-left" style="min-width: 190px;">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ item.product.get_image }}" alt="" style="width: 50px; height: 50px; object-fit: cover;">
+                            <p class="my-0 mx-3">{{ item.product.title|truncatewords:3 }}</p>
+                        </div>
                     </td>
                     <td class="align-middle">$
                         {% if item.product.types.first.sale %}
-                        {{item.product.types.first.sale}}
+                        {{ item.product.types.first.sale }}
                         {% else %}
-                        {{item.product.types.first.price}}
+                        {{ item.product.types.first.price }}
                         {% endif %}
                     </td>
                     <td class="align-middle">
-                        <form action="{% url 'basket_update' item.pk %}" method="post" class="input-group quantity mx-auto" style="width: 100px;">
+                        <form action="{% url 'basket_update' item.pk %}" method="post" class="input-group quantity mx-auto" style="width: 110px;">
                             {% csrf_token %}
                             <div class="input-group-btn">
                                 <input class="btn btn-sm btn-primary btn-minus" value="-" type="submit" name="action">
                             </div>
                             <input type="text" class="form-control form-control-sm bg-secondary border-0 text-center"
-                                   value="{{item.quantity}}">
+                                   value="{{ item.quantity }}" readonly>
                             <div class="input-group-btn">
-                                <input class="btn btn-sm btn-primary btn-minus" value="+" type="submit" name="action">
+                                <input class="btn btn-sm btn-primary btn-plus" value="+" type="submit" name="action">
                             </div>
                         </form>
                     </td>
-                    <td class="align-middle">${{item.get_total_sale}}</td>
+                    <td class="align-middle">${{ item.get_total_sale }}</td>
                     <td class="align-middle">
                         <a href="{% url 'basket_remove' item.pk %}" class="btn btn-sm btn-danger"><i class="fa fa-times"></i></a>
                     </td>
@@ -49,37 +53,43 @@
             </table>
         </div>
         <div class="col-lg-4">
-            <form class="mb-30" action="">
-                <div class="input-group">
-                    <input type="text" class="form-control border-0 p-4" placeholder="Coupon Code">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary">Apply Coupon</button>
-                    </div>
-                </div>
-            </form>
+            {% comment %}
+            Kupon formasi keyingi bosqichda (Coupon modeli bilan) qaytariladi.
+            {% endcomment %}
             <h5 class="section-title position-relative text-uppercase mb-3"><span
                     class="bg-secondary pr-3">Cart Summary</span></h5>
             <div class="bg-light p-30 mb-5">
                 <div class="border-bottom pb-2">
                     <div class="d-flex justify-content-between mb-3">
-                        <h6>Subtotal</h6>
-                        <h6>$150</h6>
+                        <h6>Subtotal ({{ total_quantity }} ta)</h6>
+                        <h6>${{ total_price }}</h6>
                     </div>
+                    {% if benefit %}
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6 class="text-success">Chegirma</h6>
+                        <h6 class="text-success">-${{ benefit }}</h6>
+                    </div>
+                    {% endif %}
                     <div class="d-flex justify-content-between">
                         <h6 class="font-weight-medium">Shipping</h6>
-                        <h6 class="font-weight-medium">$10</h6>
+                        <h6 class="font-weight-medium">${{ shipping }}</h6>
                     </div>
                 </div>
                 <div class="pt-2">
                     <div class="d-flex justify-content-between mt-2">
                         <h5>Total</h5>
-                        <h5>$160</h5>
+                        <h5>${{ grand_total }}</h5>
                     </div>
                     <button class="btn btn-block btn-primary font-weight-bold my-3 py-3">Proceed To Checkout</button>
                 </div>
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="text-center py-5 my-5">
+        <h3 class="mb-3">Savatingiz hozircha bo'sh 🛒</h3>
+        <a href="{% url 'home' %}" class="btn btn-primary px-4 py-2">Xarid qilishni boshlash</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock main %}
-

@@ -179,3 +179,18 @@ img { animation: imgFade .8s ease both; }
     transition-duration: .01ms !important;
   }
 }
+/* Sensorli ekranlarda tugmalar doim ko'rinadi */
+@media (hover: none) {
+  .product-item .product-action {
+    background: none;
+    align-items: flex-end;
+    padding-bottom: 12px;
+    pointer-events: none;
+  }
+  .product-item .product-action a.btn {
+    opacity: 1;
+    margin-top: 0;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, .92);
+  }
+}

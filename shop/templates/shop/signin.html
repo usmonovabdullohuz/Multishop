@@ -1,14 +1,22 @@
 {% extends 'base.html' %}
 
 {% block main %}
-   <!-- Signin Start -->
-    <div class="container">
-        <form action="{% url 'signin' %}" method="post" enctype="multipart/form-data" class="col-5 mx-auto d-flex flex-column">
-            {% csrf_token %}
-            <h3 class="text-center">LOGIN</h3>
-            {{form.as_p}}
-            <button class="btn btn-warning" type="submit">Sign in</button>
-        </form>
+<!-- Signin Start -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-6 col-lg-4">
+            <div class="bg-light p-30 auth-card">
+                <h3 class="text-center mb-4">LOGIN</h3>
+                <form action="{% url 'signin' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    {{ form.as_p }}
+                    <button class="btn btn-primary btn-block py-2 mt-2" type="submit">Sign in</button>
+                </form>
+                <p class="text-center mt-3 mb-0">Akkaunting yo'qmi? <a href="{% url 'signup' %}">Ro'yxatdan o't</a></p>
+            </div>
+        </div>
     </div>
-    <!-- Signin End -->
+</div>
+<!-- Signin End -->
 {% endblock main %}

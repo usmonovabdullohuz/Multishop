@@ -1,15 +1,38 @@
+from decimal import Decimal
 from random import sample
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Min
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 
+from shop.context_processors import get_counts
 from shop.forms import SignUpForm, SignInForm
 from shop.models import *
 
+SHIPPING_FEE = Decimal("10")
 
+
+# ---------- Yordamchi funksiyalar ----------
+def is_ajax(request):
+    return request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+
+def need_login(request):
+    """Login qilmagan foydalanuvchini signin'ga yuboradi (qaytish manzili bilan)."""
+    next_url = request.META.get("HTTP_REFERER") or request.get_full_path()
+    url = f"{reverse('signin')}?{urlencode({'next': next_url})}"
+    if is_ajax(request):
+        return JsonResponse({"login": url}, status=401)
+    return redirect(url)
+
+
+# ---------- Sahifalar ----------
 def index(request):
     products = list(Product.objects.all())
     context = {
@@ -67,21 +90,26 @@ def contact(request):
             subject=request.POST.get("subject"),
             message=request.POST.get("message"),
         )
+        messages.success(request, "Xabaringiz yuborildi, rahmat!")
+        return redirect("contact")
     return render(request, "shop/contact.html")
 
 
+# ---------- Autentifikatsiya ----------
 def signup(request):
     if request.method == "POST":
-        form = SignUpForm(data=request.POST)
+        form = SignUpForm(data=request.POST, files=request.FILES)
         if form.is_valid():
             form.save()
-            return redirect("home")
+            messages.success(request, "Ro'yxatdan o'tdingiz! Endi tizimga kiring.")
+            return redirect("signin")
     else:
         form = SignUpForm()
     return render(request, "shop/signup.html", {"form": form})
 
 
 def signin(request):
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
     form = SignInForm()
     if request.method == "POST":
         form = SignInForm(data=request.POST)
@@ -92,8 +120,13 @@ def signin(request):
         )
         if user:
             login(request, user)
+            if next_url and url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()}
+            ):
+                return redirect(next_url)
             return redirect("home")
-    return render(request, "shop/signin.html", {"form": form})
+        messages.error(request, "Username yoki parol noto'g'ri.")
+    return render(request, "shop/signin.html", {"form": form, "next": next_url})
 
 
 def signout(request):
@@ -101,6 +134,7 @@ def signout(request):
     return redirect("signin")
 
 
+# ---------- Yoqtirilganlar ----------
 @login_required
 def likes(request):
     liked = Like.objects.filter(user=request.user).select_related("product")
@@ -108,15 +142,24 @@ def likes(request):
     return render(request, "shop/likes.html", {"products": products})
 
 
-@login_required
 def like_toggle(request, pk):
+    if not request.user.is_authenticated:
+        return need_login(request)
     product = get_object_or_404(Product, pk=pk)
-    like, created = Like.objects.get_or_create(user=request.user, product=product)
-    if not created:
-        like.delete()
+    existing = Like.objects.filter(user=request.user, product=product)
+    if existing.exists():
+        existing.delete()
+        liked = False
+    else:
+        Like.objects.create(user=request.user, product=product)
+        liked = True
+    if is_ajax(request):
+        likes_count, basket_count = get_counts(request.user)
+        return JsonResponse({"liked": liked, "likes": likes_count, "basket": basket_count})
     return redirect(request.META.get("HTTP_REFERER", "home"))
 
 
+# ---------- Mahsulot ----------
 def detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     products = list(Product.objects.exclude(pk=pk))
@@ -124,24 +167,32 @@ def detail(request, pk):
     return render(request, "shop/detail.html", {"product": product, "similar": data})
 
 
+# ---------- Savat ----------
 @login_required
 def basket(request):
-    products = Basket.objects.filter(user=request.user)
-    total_sale = sum(item.get_total_sale() for item in products)
-    total_price = sum(item.get_total_price() for item in products)
-    total_quantity = sum(item.quantity for item in products)
+    items = list(
+        Basket.objects.filter(user=request.user, product__isnull=False)
+        .select_related("product")
+    )
+    total_sale = sum(item.get_total_sale() for item in items)
+    total_price = sum(item.get_total_price() for item in items)
+    total_quantity = sum(item.quantity for item in items)
+    shipping = SHIPPING_FEE if items else Decimal("0")
     context = {
-        "products": products,
+        "products": items,
         "total_sale": total_sale,
         "total_price": total_price,
         "total_quantity": total_quantity,
         "benefit": total_price - total_sale,
+        "shipping": shipping,
+        "grand_total": total_sale + shipping,
     }
     return render(request, "shop/basket.html", context)
 
 
-@login_required
 def basket_add(request, pk):
+    if not request.user.is_authenticated:
+        return need_login(request)
     product = get_object_or_404(Product, pk=pk)
     try:
         quantity = max(int(request.POST.get("quantity", 1)), 1)
@@ -153,6 +204,9 @@ def basket_add(request, pk):
     if not created:
         item.quantity += quantity
         item.save()
+    if is_ajax(request):
+        likes_count, basket_count = get_counts(request.user)
+        return JsonResponse({"added": True, "likes": likes_count, "basket": basket_count})
     return redirect(request.META.get("HTTP_REFERER", "home"))
 
 

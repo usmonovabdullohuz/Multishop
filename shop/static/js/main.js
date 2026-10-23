@@ -1,104 +1,100 @@
-(function ($) {
+/* shop.js — layk va savat: sahifani yangilamasdan, sonlar jonli yangilanadi
+   Ishlatish: havola yoki forma ustiga data-ajax atributini qo'shing.
+   JS o'chiq bo'lsa, havola/forma odatdagidek ishlayveradi. */
+(function () {
     "use strict";
-    
-    // Dropdown on mouse hover
-    $(document).ready(function () {
-        function toggleNavbarMethod() {
-            if ($(window).width() > 992) {
-                $('.navbar .dropdown').on('mouseover', function () {
-                    $('.dropdown-toggle', this).trigger('click');
-                }).on('mouseout', function () {
-                    $('.dropdown-toggle', this).trigger('click').blur();
-                });
-            } else {
-                $('.navbar .dropdown').off('mouseover').off('mouseout');
+
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var csrf = meta ? meta.content : "";
+
+    // ---- Sonlarni yangilash (navbar + topbar) ----
+    function setCount(name, value) {
+        document.querySelectorAll('[data-count="' + name + '"]').forEach(function (el) {
+            el.textContent = value;
+            el.classList.remove("count-bump");
+            void el.offsetWidth; // animatsiyani qayta ishga tushirish
+            el.classList.add("count-bump");
+        });
+    }
+
+    // ---- Xabar (toast) ----
+    function toast(text) {
+        var old = document.querySelector(".shop-toast");
+        if (old) old.remove();
+        var box = document.createElement("div");
+        box.className = "shop-toast";
+        box.textContent = text;
+        document.body.appendChild(box);
+        requestAnimationFrame(function () { box.classList.add("show"); });
+        setTimeout(function () {
+            box.classList.remove("show");
+            setTimeout(function () { box.remove(); }, 400);
+        }, 2200);
+    }
+
+    // ---- So'rov yuborish ----
+    function send(url, body) {
+        return fetch(url, {
+            method: "POST",
+            body: body || null,
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrf
             }
-        }
-        toggleNavbarMethod();
-        $(window).resize(toggleNavbarMethod);
-    });
-    
-    
-    // Back to top button
-    $(window).scroll(function () {
-        if ($(this).scrollTop() > 100) {
-            $('.back-to-top').fadeIn('slow');
-        } else {
-            $('.back-to-top').fadeOut('slow');
-        }
-    });
-    $('.back-to-top').click(function () {
-        $('html, body').animate({scrollTop: 0}, 1500, 'easeInOutExpo');
-        return false;
-    });
-
-
-    // Vendor carousel
-    $('.vendor-carousel').owlCarousel({
-        loop: true,
-        margin: 29,
-        nav: false,
-        autoplay: true,
-        smartSpeed: 1000,
-        responsive: {
-            0:{
-                items:2
-            },
-            576:{
-                items:3
-            },
-            768:{
-                items:4
-            },
-            992:{
-                items:5
-            },
-            1200:{
-                items:6
+        }).then(function (res) {
+            if (res.status === 401) {
+                return res.json().then(function (d) { window.location.href = d.login; return null; });
             }
-        }
-    });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+        });
+    }
 
+    // ---- Javobni sahifaga qo'llash ----
+    function apply(data, el) {
+        if (!data) return;
+        if (data.likes !== undefined) setCount("likes", data.likes);
+        if (data.basket !== undefined) setCount("basket", data.basket);
 
-    // Related carousel
-    $('.related-carousel').owlCarousel({
-        loop: true,
-        margin: 29,
-        nav: false,
-        autoplay: true,
-        smartSpeed: 1000,
-        responsive: {
-            0:{
-                items:1
-            },
-            576:{
-                items:2
-            },
-            768:{
-                items:3
-            },
-            992:{
-                items:4
+        if ("liked" in data) {
+            if (el) {
+                el.classList.toggle("is-liked", data.liked);
+                var icon = el.querySelector("i");
+                if (icon) {
+                    icon.classList.toggle("fas", data.liked);
+                    icon.classList.toggle("far", !data.liked);
+                }
+                el.classList.remove("pop");
+                void el.offsetWidth;
+                el.classList.add("pop");
             }
+            toast(data.liked ? "Yoqtirilganlarga qo'shildi ❤️" : "Yoqtirilganlardan olib tashlandi");
         }
+        if (data.added) toast("Savatga qo'shildi 🛒");
+    }
+
+    // ---- Havolalar (<a data-ajax href="...">) ----
+    document.addEventListener("click", function (e) {
+        var el = e.target.closest("a[data-ajax], button[data-ajax][data-url]");
+        if (!el) return;
+        e.preventDefault();
+        if (el.dataset.busy) return;
+        el.dataset.busy = "1";
+        var url = el.getAttribute("href") || el.dataset.url;
+        send(url)
+            .then(function (data) { apply(data, el); })
+            .catch(function () { window.location.href = url; }) // xato bo'lsa, oddiy usulga qaytamiz
+            .then(function () { delete el.dataset.busy; });
     });
 
-
-    // Product Quantity
-    $('.quantity button').on('click', function () {
-        var button = $(this);
-        var oldValue = button.parent().parent().find('input').val();
-        if (button.hasClass('btn-plus')) {
-            var newVal = parseFloat(oldValue) + 1;
-        } else {
-            if (oldValue > 0) {
-                var newVal = parseFloat(oldValue) - 1;
-            } else {
-                newVal = 0;
-            }
-        }
-        button.parent().parent().find('input').val(newVal);
+    // ---- Formalar (<form data-ajax>), masalan miqdor bilan savatga qo'shish ----
+    document.addEventListener("submit", function (e) {
+        var form = e.target.closest("form[data-ajax]");
+        if (!form) return;
+        e.preventDefault();
+        send(form.action, new FormData(form))
+            .then(function (data) { apply(data, null); })
+            .catch(function () { form.submit(); });
     });
-    
-})(jQuery);
-
+})();
